@@ -11,17 +11,14 @@ static int32_t queue_capacity, queue_size;
 static int32_t queue_head, queue_tail;
 static int32_t *queue;
 
-static pthread_mutex_t queue_mutex;
-static pthread_cond_t queue_cond;
+static pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t queue_cond = PTHREAD_COND_INITIALIZER;
 
 void socket_queue_init(int32_t capacity)
 {
     queue = (int32_t *)malloc(capacity * sizeof(int32_t));
     if (queue == NULL)
         error_exit(ERROR_MEM_ALLOC);
-
-    queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-    queue_cond = PTHREAD_COND_INITIALIZER;
 
     queue_capacity = capacity;
 }
