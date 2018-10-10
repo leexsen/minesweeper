@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "error.h"
 #include "authentication.h"
@@ -71,12 +72,12 @@ void authentication_destroy(void)
     }
 }
 
-int authentication_verify(char *name, char *password)
+bool authentication_isvalid(char *name, char *password)
 {
     for (UserInfo *node = head; node != NULL; node = node->next) {
         if (strcmp(name, node->name) == 0 && strcmp(password, node->password) == 0)
-            return 1;
+            return true;
     }
 
-    return 0;
+    return false;
 }

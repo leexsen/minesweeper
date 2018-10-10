@@ -1,6 +1,8 @@
 #ifndef __AUTHENTICATION_H__
 #define __AUTHENTICATION_H__
 
+#include <stdbool.h>
+
 typedef struct user_info {
     char name[20];
     char password[20];
@@ -9,6 +11,6 @@ typedef struct user_info {
 
 extern void authentication_init(char *filename);
 extern void authentication_destroy(void);
-extern int authentication_verify(char *name, char *password);
+extern bool authentication_isvalid(char *name, char *password);
 
 #endif

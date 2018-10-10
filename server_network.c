@@ -1,6 +1,8 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "error.h"
 #include "server_network.h"
@@ -30,9 +32,13 @@ int32_t server_network_init(uint16_t port)
 
 int32_t server_network_accept(int32_t server_socket)
 {
-    int32_t client_socket = accept(server_socket, NULL, NULL);
+    struct sockaddr_in client_addr;
+    socklen_t sin_size = sizeof(struct sockaddr_in);
+
+    int32_t client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &sin_size);
     if (client_socket == -1)
         error_exit(SOCKET_ACCEPT_FAILED);
 
+    printf("Server: got connection from %s\n", inet_ntoa(client_addr.sin_addr));
     return client_socket;
 }

@@ -7,7 +7,8 @@ enum error_code {
     SOCKET_BIND_FAILED,
     SOCKET_LISTEN_FAILED,
     SOCKET_ACCEPT_FAILED,
-    OPEN_FILE_FAILED
+    OPEN_FILE_FAILED,
+    SOCKET_CONNECT_FAILED
 };
 
 extern void error_exit(int code);
