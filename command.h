@@ -5,7 +5,7 @@
 #include <time.h>
 
 #include "game.h"
-#include "Leaderboard.h"
+#include "leaderboard.h"
 #include "authentication.h"
 
 enum command {
