@@ -62,18 +62,6 @@ Game *game_init(char *player_name)
 
     return game;
 }
-/*
-static void print_tiles(Game *game)
-{
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < 9; j++) {
-
-            printf("%d %d %d: ", game->tiles[i][j].adjacent_mines, game->tiles[i][j].is_mine, game->tiles[i][j].placed_flag);
-        }
-        puts("");
-    }
-}
-*/
 
 int game_reveal_tile(Game *game, int8_t x, int8_t y)
 {
@@ -109,10 +97,10 @@ int game_place_flag(Game *game, int8_t x, int8_t y)
         (y < 0 || y >= NUM_TILES_Y))
         return -1; // place flge failed
         
-    if (!tiles[x][y].is_mine || tiles[x][y].placed_flag)
+    if (!tiles[x][y].is_mine || tiles[x][y].revealed)
         return -1; // place flge failed
 
-    tiles[x][y].placed_flag = true;
+    tiles[x][y].revealed = true;
 
     if (--(game->num_mines) == 0)
         return 1; // win

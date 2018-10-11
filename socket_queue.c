@@ -41,7 +41,6 @@ void socket_queue_put(int socketfd)
     pthread_mutex_lock(&queue_mutex);
 
     if (queue_size + 1 > queue_capacity) {
-        //pthread_cond_broadcast(&queue_cond);
         queue_size++;
         pthread_cond_wait(&queue_cond, &queue_mutex);
     }

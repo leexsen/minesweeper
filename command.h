@@ -5,6 +5,8 @@
 #include <time.h>
 
 #include "game.h"
+#include "Leaderboard.h"
+#include "authentication.h"
 
 enum command {
     ASK_USERINFO,
@@ -16,11 +18,9 @@ enum command {
     START_GAME,
     
     REQUEST_TILES_MINES,
-    REQUEST_TILES_ALL,
     REQUEST_TILES_REVEALED,
 
     TILES_MINES_RESPOND,
-    TILES_ALL_RESPOND,
     TILES_REVEALD_RESPOND,
 
     REVEAL_TILE,
@@ -43,15 +43,11 @@ enum command {
 
 typedef struct {
     uint8_t cmd_id;
+
     union {
         struct {
             int8_t x, y;
         } coord;
-
-        struct {
-            char name[20];
-            char password[20];
-        } user_info;
 
         struct {
             uint8_t tiles[NUM_TILES_X][NUM_TILES_Y];
@@ -59,12 +55,8 @@ typedef struct {
             time_t duration;
         } game_info;
 
-        struct {
-            char name[20];
-            time_t duration;
-            uint8_t num_won;
-            uint8_t num_played;
-        } leaderboard;
+        User user;
+        Leaderboard Leaderboard;
     };
 } CmdBlock;
 

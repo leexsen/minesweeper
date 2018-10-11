@@ -7,11 +7,11 @@
 #include "error.h"
 #include "authentication.h"
 
-static UserInfo *head;
+static UserList *head;
 
-static UserInfo *user_info_alloc(void)
+static UserList *user_alloc(void)
 {
-    UserInfo *node = (UserInfo *)malloc(sizeof(UserInfo));
+    UserList *node = (UserList *)malloc(sizeof(UserList));
     if (node == NULL)
         error_exit(ERROR_MEM_ALLOC);
 
@@ -25,19 +25,20 @@ void authentication_init(char *filename)
     if (file == NULL)
         error_exit(OPEN_FILE_FAILED);
 
+    // skip the this line
     while (fgetc(file) != '\n');
 
     char ch = fgetc(file);
     while (!feof(file)) {
         int count = 0;
 
-        UserInfo *node = user_info_alloc();
+        UserList *node = user_alloc();
 
         while (ch != ' ' && ch != '\t') {
-            node->name[count++] = ch;
+            node->user.name[count++] = ch;
             ch = fgetc(file);
         }
-        node->name[count] = '\0';
+        node->user.name[count] = '\0';
 
         do {
             ch = fgetc(file);
@@ -45,10 +46,10 @@ void authentication_init(char *filename)
 
         count = 0;
         while (ch != '\n' && ch != EOF) {
-            node->password[count++] = ch;
+            node->user.password[count++] = ch;
             ch = fgetc(file);
         }
-        node->password[count] = '\0';
+        node->user.password[count] = '\0';
 
         if (ch == '\n')
             ch = fgetc(file);
@@ -66,7 +67,7 @@ void authentication_init(char *filename)
 
 void authentication_destroy(void)
 {
-    for (UserInfo *node = head; node != NULL; node = head) {
+    for (UserList *node = head; node != NULL; node = head) {
         head = head->next;
         free(node);
     }
@@ -74,8 +75,8 @@ void authentication_destroy(void)
 
 bool authentication_isvalid(char *name, char *password)
 {
-    for (UserInfo *node = head; node != NULL; node = node->next) {
-        if (strcmp(name, node->name) == 0 && strcmp(password, node->password) == 0)
+    for (UserList *node = head; node != NULL; node = node->next) {
+        if (strcmp(name, node->user.name) == 0 && strcmp(password, node->user.password) == 0)
             return true;
     }
 

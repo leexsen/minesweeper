@@ -9,7 +9,7 @@
 #include "command.h"
 #include "client_network.h"
 
-void print_welcom_msg(void)
+void print_welcome_msg(void)
 {
     puts("-----------------------------------------------");
     puts("Welcome to the online Minesweeper gaming system");
@@ -48,10 +48,11 @@ void print_tiles(CmdBlock *cmd)
 void reveal_tile(int32_t socketfd, CmdBlock *cmd, bool *game_over)
 {
     while (true) {
-        printf("Enter tile coordinates: ");
+        printf("Enter tile coordinates (e.g. A0): ");
 
-        getchar();
+        while (getchar() != '\n');
         scanf("%c%c", &(cmd->coord.x), &(cmd->coord.y));
+
         cmd->coord.x -= 'A';
         cmd->coord.y -= '0';
 
@@ -61,18 +62,22 @@ void reveal_tile(int32_t socketfd, CmdBlock *cmd, bool *game_over)
 
         if (cmd->cmd_id == REVEAL_TILE_SUCCEED)
             break;
+
         else if (cmd->cmd_id == REVEAL_TILE_FAILED)
-            puts("Invalied coordinates, please try again");
+            puts("The coordinates could be either invalid or have been revealed, please try again");
+
         else if (cmd->cmd_id == LOSS) {
             *game_over = true;
+
             cmd->cmd_id = REQUEST_TILES_MINES;
             send(socketfd, cmd, sizeof(CmdBlock), 0);
             recv(socketfd, cmd, sizeof(CmdBlock), 0);
 
             printf("\n\nRemaining mines: %d\n\n", cmd->game_info.num_mines);
             print_tiles(cmd);
-
-            puts("\n\nGame over! You hit a mine\n");
+            puts("\n\n-------------------------");
+            puts("Game over! You hit a mine");
+            puts("-------------------------\n");
             break;
         }
     }
@@ -81,10 +86,11 @@ void reveal_tile(int32_t socketfd, CmdBlock *cmd, bool *game_over)
 void place_flag(int32_t socketfd, CmdBlock *cmd, bool *game_over)
 {
     while (true) {
-        printf("Enter tile coordinates: ");
+        printf("Enter tile coordinates (e.g. A0): ");
 
-        getchar();
+        while (getchar() != '\n');
         scanf("%c%c", &(cmd->coord.x), &(cmd->coord.y));
+
         cmd->coord.x -= 'A';
         cmd->coord.y -= '0';
 
@@ -94,18 +100,22 @@ void place_flag(int32_t socketfd, CmdBlock *cmd, bool *game_over)
 
         if (cmd->cmd_id == PLACE_FLAG_SUCCEED)
             break;
+
         else if (cmd->cmd_id == PLACE_FLAG_FAILED)
-            puts("Invalied coordinates, please try again");
+            puts("The coordinates could be either invalid, no mines here or have been placed a flag, please try again");
+
         else if (cmd->cmd_id == WON) {
             *game_over = true;
-            cmd->cmd_id = REQUEST_TILES_ALL;
+            cmd->cmd_id = REQUEST_TILES_REVEALED;
             send(socketfd, cmd, sizeof(CmdBlock), 0);
             recv(socketfd, cmd, sizeof(CmdBlock), 0);
 
             printf("\n\nRemaining mines: %d\n\n", cmd->game_info.num_mines);
             print_tiles(cmd);
-
-            puts("\n\nCongratulations! You have located all the mines\n");
+            puts("\n\n-----------------------------------------------");
+            puts("Congratulations! You have located all the mines");
+            puts("-----------------------------------------------");
+            printf("You won in %ld seconds!\n\n", cmd->game_info.duration);
             break;
         }
     }
@@ -117,7 +127,7 @@ void play_game(int32_t socketfd)
     bool game_over = false;
 
     while (!game_over) {
-        cmd.cmd_id = REQUEST_TILES_ALL;
+        cmd.cmd_id = REQUEST_TILES_REVEALED;
         send(socketfd, &cmd, sizeof(CmdBlock), 0);
         recv(socketfd, &cmd, sizeof(CmdBlock), 0);
 
@@ -131,19 +141,20 @@ void play_game(int32_t socketfd)
         puts("<Q> Quit");
         printf("\nOption (R, P, Q): ");
 
-        char op;
-        do { op = getchar(); } while (op == ' ' || op == '\n');
+        while (getchar() != '\n');
+        char op = getchar();
 
         if (op == 'R') {
             reveal_tile(socketfd, &cmd, &game_over);
 
         } else if (op == 'P') {
             place_flag(socketfd, &cmd, &game_over);
-            //
+
         } else if (op == 'Q') {
             cmd.cmd_id = QUIT_GAME;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
             break;
+
         } else
             puts("Invalid inputs, please try again\n");
     }
@@ -160,8 +171,8 @@ void menu_selection(int32_t socketfd)
         puts("<3> Quit");
         printf("\nSelection option (1-3): ");
 
-        char op;
-        do { op = getchar(); } while (op == ' ' || op == '\n');
+        while (getchar() != '\n');
+        char op = getchar();
 
         if (op == '1') {
             cmd.cmd_id = START_GAME;
@@ -171,7 +182,7 @@ void menu_selection(int32_t socketfd)
         } else if (op == '2') {
             cmd.cmd_id = REQUEST_LEADERBOARD;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
-            //
+
         } else if (op == '3') {
             cmd.cmd_id = DISCONNECT;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
@@ -188,7 +199,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    print_welcom_msg();
+    print_welcome_msg();
 
     char *server_ip = argv[1];
     uint16_t port = atoi(argv[2]);
@@ -198,7 +209,8 @@ int main(int argc, char **argv)
     recv(socketfd, &cmd, sizeof(CmdBlock), 0);
         
     if (cmd.cmd_id == ASK_USERINFO) {
-        get_user_info(cmd.user_info.name, cmd.user_info.password);
+
+        get_user_info(cmd.user.name, cmd.user.password);
         cmd.cmd_id = USERINFO_RESPOND;
         send(socketfd, &cmd, sizeof(CmdBlock), 0);
         recv(socketfd, &cmd, sizeof(CmdBlock), 0);

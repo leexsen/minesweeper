@@ -13,7 +13,6 @@ typedef struct {
     int8_t adjacent_mines;
     bool revealed;
     bool is_mine;
-    bool placed_flag;
 } Tile;
 
 typedef struct {
@@ -24,7 +23,6 @@ typedef struct {
 } Game;
 
 extern Game *game_init(char *player_name);
-//extern void print_tiles(Game *game);
 extern int game_reveal_tile(Game *game, int8_t x, int8_t y);
 extern int game_place_flag(Game *game, int8_t x, int8_t y);
 extern void game_over(Game *game, bool won);

@@ -3,11 +3,15 @@
 
 #include <stdbool.h>
 
-typedef struct user_info {
+typedef struct {
     char name[20];
     char password[20];
-    struct user_info *next;
-} UserInfo;
+} User;
+
+typedef struct user_list {
+    User user;
+    struct user_list *next;
+} UserList;
 
 extern void authentication_init(char *filename);
 extern void authentication_destroy(void);

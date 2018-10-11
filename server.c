@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <sys/socket.h>
@@ -19,7 +20,6 @@
 #define NUM_THREADS 10
 #define QUEUE_CAPACITY 10
 
-
 void game_tiles_extract(Game *game, CmdBlock *cmd)
 {
     uint8_t cmd_id = cmd->cmd_id;
@@ -29,18 +29,26 @@ void game_tiles_extract(Game *game, CmdBlock *cmd)
     for (int i = 0; i < NUM_TILES_X; i++) {
         for (int j = 0; j < NUM_TILES_Y; j++) {
             if (game_tiles[i][j].is_mine) {
-                if (cmd_id == REQUEST_TILES_MINES && !game_tiles[i][j].placed_flag)
+
+                // only send undiscovered mines according to the specification if game is over
+                if (cmd_id == REQUEST_TILES_MINES && !game_tiles[i][j].revealed)
                     cmd_tiles[i][j] = '*';
-                else if (cmd_id == REQUEST_TILES_ALL && game_tiles[i][j].placed_flag)
+
+                // send the positions of discovered mines
+                else if (cmd_id == REQUEST_TILES_REVEALED && game_tiles[i][j].revealed)
                     cmd_tiles[i][j] = '+';
+
                 else
                     cmd_tiles[i][j] = ' ';
 
             } else if (game_tiles[i][j].revealed) {
-                if (cmd_id == REQUEST_TILES_ALL || cmd_id == REQUEST_TILES_REVEALED)
+
+                if (cmd_id == REQUEST_TILES_REVEALED)
                     cmd_tiles[i][j] = game_tiles[i][j].adjacent_mines + '0';
+
                 else
                     cmd_tiles[i][j] = ' ';
+
             } else
                 cmd_tiles[i][j] = ' ';
         }
@@ -50,8 +58,9 @@ void game_tiles_extract(Game *game, CmdBlock *cmd)
 void process_request(int32_t socketfd)
 {
     Game *game;
-    char player_name[20];
     CmdBlock cmd;
+    char player_name[20];
+
     cmd.cmd_id = ASK_USERINFO;
     send(socketfd, &cmd, sizeof(CmdBlock), 0);
 
@@ -59,12 +68,11 @@ void process_request(int32_t socketfd)
         recv(socketfd, &cmd, sizeof(CmdBlock), 0);
 
         if (cmd.cmd_id == USERINFO_RESPOND) {
-            //printf("%s, %s\n", cmd.user_info.name, cmd.user_info.password);
-                
-            if (authentication_isvalid(cmd.user_info.name, cmd.user_info.password)) {
+            //printf("%s, %s\n", cmd.user.name, cmd.user.password);           
+            if (authentication_isvalid(cmd.user.name, cmd.user.password)) {
                 cmd.cmd_id = VALID_USER;
                 send(socketfd, &cmd, sizeof(CmdBlock), 0);
-                strncpy(player_name, cmd.user_info.name, 20);
+                strncpy(player_name, cmd.user.name, 20);
 
             } else {
                 cmd.cmd_id = INVALID_USER;
@@ -74,10 +82,10 @@ void process_request(int32_t socketfd)
 
         } else if (cmd.cmd_id == START_GAME) {
             game = game_init(player_name);
-            //print_tiles(game);
 
         } else if (cmd.cmd_id == REVEAL_TILE) {
             int ret = game_reveal_tile(game, cmd.coord.x, cmd.coord.y);
+
             if (ret == 0)
                 cmd.cmd_id = REVEAL_TILE_SUCCEED;
             else if (ret == -1)
@@ -88,9 +96,10 @@ void process_request(int32_t socketfd)
             }
 
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
-            //print_tiles(game);
+
         } else if (cmd.cmd_id == PLACE_FLAG) {
             int ret = game_place_flag(game, cmd.coord.x, cmd.coord.y);
+
             if (ret == 0)
                 cmd.cmd_id = PLACE_FLAG_SUCCEED;
             else if (ret == -1)
@@ -101,17 +110,12 @@ void process_request(int32_t socketfd)
             }
 
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
-            //print_tiles(game);
+ 
         } else if (cmd.cmd_id == REQUEST_TILES_REVEALED) {
             game_tiles_extract(game, &cmd);
             cmd.cmd_id = TILES_REVEALD_RESPOND;
             cmd.game_info.num_mines = game->num_mines;
-            send(socketfd, &cmd, sizeof(CmdBlock), 0);
-
-        } else if (cmd.cmd_id == REQUEST_TILES_ALL) {
-            game_tiles_extract(game, &cmd);
-            cmd.cmd_id = TILES_ALL_RESPOND;
-            cmd.game_info.num_mines = game->num_mines;
+            cmd.game_info.duration = game->duration;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
 
         } else if (cmd.cmd_id == REQUEST_TILES_MINES) {
@@ -121,7 +125,9 @@ void process_request(int32_t socketfd)
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
 
         } else if (cmd.cmd_id == QUIT_GAME) {
-            ;//game_destroy()
+            game_over(game, false);
+            free(game);
+            game = NULL;
         }
 
 
@@ -130,6 +136,14 @@ void process_request(int32_t socketfd)
             break;
         }
     }
+}
+
+void stop_server(int signal)
+{
+    socket_queue_destroy();
+    thread_pool_destroy();
+    authentication_destroy();
+    pthread_exit(NULL);
 }
 
 void thread_cleanup_handler(void *arg)
@@ -159,6 +173,7 @@ void connection_handler(void)
 int main(int argc, char **argv)
 {
     srand(RANDOM_NUMBER_SEED);
+    signal(SIGINT, stop_server);
 
     authentication_init("Authentication.txt");
     socket_queue_init(QUEUE_CAPACITY);
@@ -172,14 +187,8 @@ int main(int argc, char **argv)
 
     printf("Server: listening on port %d\n", port);
 
-    while (1) {
+    while (true) {
         int32_t client_socket = server_network_accept(server_socket);
         socket_queue_put(client_socket);
     }
-
-    close(server_socket);
-    socket_queue_destroy();
-    thread_pool_destroy();
-    authentication_destroy();
-    pthread_exit(0);
 }
