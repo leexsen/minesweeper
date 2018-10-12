@@ -121,6 +121,31 @@ void place_flag(int32_t socketfd, CmdBlock *cmd, bool *game_over)
     }
 }
 
+void print_leaderboard(int32_t socketfd, CmdBlock *cmd)
+{
+    puts("\n------------------------------------------------------------------------------\n");
+
+    recv(socketfd, cmd, sizeof(CmdBlock), 0);
+
+    if (cmd->cmd_id == LEADERBOARD_END)
+        puts("There is no information currently stored in the leaderboard. Try again later.");
+
+    else {
+        while (cmd->cmd_id != LEADERBOARD_END) {
+            char *name = cmd->leaderboard.record.player_name;
+            time_t duration = cmd->leaderboard.duration;
+            uint8_t num_won = cmd->leaderboard.record.num_won;
+            uint8_t num_played = cmd->leaderboard.record.num_played;
+
+            printf("%s\t%10ld seconds\t%5d games won, %5d games played\n", name, duration, num_won, num_played);
+            recv(socketfd, cmd, sizeof(CmdBlock), 0);
+        }
+    }
+
+    puts("\n------------------------------------------------------------------------------\n\n");
+
+}
+
 void play_game(int32_t socketfd)
 {
     CmdBlock cmd;
@@ -182,11 +207,13 @@ void menu_selection(int32_t socketfd)
         } else if (op == '2') {
             cmd.cmd_id = REQUEST_LEADERBOARD;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
+            print_leaderboard(socketfd, &cmd);
 
         } else if (op == '3') {
             cmd.cmd_id = DISCONNECT;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
             break;
+
         } else
             puts("Invalid inputs, please try again\n");
     }

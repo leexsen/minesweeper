@@ -29,11 +29,9 @@ void socket_queue_destroy(void)
         close(queue[queue_head]);
         queue_head = (queue_head + 1) % queue_capacity;
     }
-    close(queue[queue_head]);
     
+    close(queue[queue_head]);
     free(queue);
-    pthread_mutex_destroy(&queue_mutex);
-    pthread_cond_destroy(&queue_cond);
 }
 
 void socket_queue_put(int socketfd)

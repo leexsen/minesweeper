@@ -10,6 +10,7 @@
 
 #include "socket_queue.h"
 #include "thread_pool.h"
+#include "leaderboard.h"
 #include "server_network.h"
 #include "authentication.h"
 #include "command.h"
@@ -128,20 +129,20 @@ void process_request(int32_t socketfd)
             game_over(game, false);
             free(game);
             game = NULL;
-        }
 
+        } else if (cmd.cmd_id == REQUEST_LEADERBOARD) {
+            send_leaderboard(socketfd);
 
-
-        else if (cmd.cmd_id == DISCONNECT) {
+        } else if (cmd.cmd_id == DISCONNECT)
             break;
-        }
     }
 }
 
 void stop_server(int signal)
 {
-    socket_queue_destroy();
     thread_pool_destroy();
+    socket_queue_destroy();
+    leaderboard_destroy();
     authentication_destroy();
     pthread_exit(NULL);
 }

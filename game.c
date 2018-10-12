@@ -8,6 +8,7 @@
 
 #include "error.h"
 #include "game.h"
+#include "leaderboard.h"
 
 static pthread_mutex_t mutex_rand = PTHREAD_MUTEX_INITIALIZER;
 
@@ -111,5 +112,5 @@ int game_place_flag(Game *game, int8_t x, int8_t y)
 void game_over(Game *game, bool won)
 {
     game->duration = time(NULL) - game->duration;
-    puts("game over");
+    leaderboard_put(game->player_name, game->duration, won);
 }

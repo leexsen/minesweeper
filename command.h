@@ -35,7 +35,7 @@ enum command {
     
     REQUEST_LEADERBOARD,
     LEADERBOARD_RECORD,
-    LEADERBOARD_EMPTY,
+    LEADERBOARD_END,
 
     QUIT_GAME,
     DISCONNECT
@@ -55,8 +55,12 @@ typedef struct {
             time_t duration;
         } game_info;
 
+        struct {
+            Record record;
+            time_t duration;
+        } leaderboard;
+
         User user;
-        Leaderboard Leaderboard;
     };
 } CmdBlock;
 

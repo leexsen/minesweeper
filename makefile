@@ -1,7 +1,7 @@
 CFLAGG = -Wall -pthread -std=c99
 
 all: server client
-server: authentication.o error.o server.o server_network.o socket_queue.o thread_pool.o game.o
+server: authentication.o error.o server.o server_network.o socket_queue.o thread_pool.o game.o leaderboard.o
 	gcc $(CFLAGG) -o server $^
 
 client: client.o client_network.o error.o
@@ -32,6 +32,9 @@ thread_pool.o: thread_pool.c
 	gcc $(CFLAGG) -c $^
 
 game.o: game.c
+	gcc $(CFLAGG) -c $^
+
+leaderboard.o: leaderboard.c
 	gcc $(CFLAGG) -c $^
 
 clean: *.o 
