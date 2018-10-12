@@ -29,5 +29,9 @@ void error_exit(int code)
         case OPEN_FILE_FAILED:
             printf("Open file failed\n");
             exit(0);
+
+        case SOCKET_CONNECT_FAILED:
+            printf("Socket connection failed\n");
+            exit(0);
     }
 }
