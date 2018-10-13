@@ -44,7 +44,7 @@ enum command {
 typedef struct {
     uint8_t cmd_id;
 
-    union {
+    union payload {
         struct {
             int8_t x, y;
         } coord;
@@ -62,6 +62,7 @@ typedef struct {
 
         User user;
     };
+    
 } CmdBlock;
 
 #endif

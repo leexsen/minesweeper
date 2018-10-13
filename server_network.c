@@ -20,6 +20,10 @@ int32_t server_network_init(uint16_t port)
     my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
 
+    int reuse = 1;
+    if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+        error_exit(SOCKET_REUSE_FAILED);
+
     if (bind(socketfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
         error_exit(SOCKET_BIND_FAILED);
 

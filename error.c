@@ -33,5 +33,9 @@ void error_exit(int code)
         case SOCKET_CONNECT_FAILED:
             printf("Socket connection failed\n");
             exit(0);
+
+        case SOCKET_REUSE_FAILED:
+            printf("Socket reuse failed\n");
+            exit(0);
     }
 }

@@ -22,7 +22,7 @@
 #define NUM_THREADS 10
 #define QUEUE_CAPACITY 10
 
-static volatile bool stop_running;
+static volatile sig_atomic_t stop_running;
 static int32_t server_socket;
 
 void game_tiles_extract(Game *game, CmdBlock *cmd)
@@ -143,7 +143,7 @@ void process_request(int32_t socketfd)
 
 void stop_server(int signal)
 {
-    stop_running = true;
+    stop_running = 1;
     close(server_socket);
 }
 
