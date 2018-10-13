@@ -5,5 +5,7 @@
 
 extern void thread_pool_init(int32_t n_threads, void (*task)(void));
 extern void thread_pool_destroy(void);
+extern void thread_pool_cancel(void);
+extern void thread_pool_join(void);
 
 #endif

@@ -131,7 +131,7 @@ void print_leaderboard(int32_t socketfd, CmdBlock *cmd)
         puts("There is no information currently stored in the leaderboard. Try again later.");
 
     else {
-        while (cmd->cmd_id != LEADERBOARD_END) {
+        do {
             char *name = cmd->leaderboard.record.player_name;
             time_t duration = cmd->leaderboard.duration;
             uint8_t num_won = cmd->leaderboard.record.num_won;
@@ -139,7 +139,8 @@ void print_leaderboard(int32_t socketfd, CmdBlock *cmd)
 
             printf("%s\t%10ld seconds\t%5d games won, %5d games played\n", name, duration, num_won, num_played);
             recv(socketfd, cmd, sizeof(CmdBlock), 0);
-        }
+            
+        } while (cmd->cmd_id != LEADERBOARD_END);
     }
 
     puts("\n------------------------------------------------------------------------------\n\n");

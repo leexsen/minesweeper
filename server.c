@@ -21,6 +21,9 @@
 #define NUM_THREADS 10
 #define QUEUE_CAPACITY 10
 
+static volatile bool stop_running;
+static int32_t server_socket;
+
 void game_tiles_extract(Game *game, CmdBlock *cmd)
 {
     uint8_t cmd_id = cmd->cmd_id;
@@ -68,8 +71,7 @@ void process_request(int32_t socketfd)
     while (true) {
         recv(socketfd, &cmd, sizeof(CmdBlock), 0);
 
-        if (cmd.cmd_id == USERINFO_RESPOND) {
-            //printf("%s, %s\n", cmd.user.name, cmd.user.password);           
+        if (cmd.cmd_id == USERINFO_RESPOND) {          
             if (authentication_isvalid(cmd.user.name, cmd.user.password)) {
                 cmd.cmd_id = VALID_USER;
                 send(socketfd, &cmd, sizeof(CmdBlock), 0);
@@ -140,11 +142,8 @@ void process_request(int32_t socketfd)
 
 void stop_server(int signal)
 {
-    thread_pool_destroy();
-    socket_queue_destroy();
-    leaderboard_destroy();
-    authentication_destroy();
-    pthread_exit(NULL);
+    stop_running = 1;
+    close(server_socket);
 }
 
 void thread_cleanup_handler(void *arg)
@@ -184,12 +183,23 @@ int main(int argc, char **argv)
     if (argc > 1)
         port = atoi(argv[1]);
     
-    int32_t server_socket = server_network_init(port);
+    server_socket = server_network_init(port);
 
     printf("Server: listening on port %d\n", port);
 
-    while (true) {
+    while (!stop_running) {
         int32_t client_socket = server_network_accept(server_socket);
-        socket_queue_put(client_socket);
+        if (client_socket != -1)
+            socket_queue_put(client_socket);
     }
+
+    puts("123");
+    thread_pool_cancel();
+    thread_pool_join();
+    thread_pool_destroy();
+
+    socket_queue_destroy();
+    leaderboard_destroy();
+    authentication_destroy();
+    pthread_exit(NULL);
 }

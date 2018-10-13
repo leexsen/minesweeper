@@ -36,8 +36,10 @@ int32_t server_network_accept(int32_t server_socket)
     socklen_t sin_size = sizeof(struct sockaddr_in);
 
     int32_t client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &sin_size);
-    if (client_socket == -1)
-        error_exit(SOCKET_ACCEPT_FAILED);
+    if (client_socket == -1) {
+        puts("Socket accept failed");
+        return -1;
+    }
 
     printf("Server: got connection from %s\n", inet_ntoa(client_addr.sin_addr));
     return client_socket;

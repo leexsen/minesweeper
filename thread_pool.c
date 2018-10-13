@@ -22,10 +22,19 @@ void thread_pool_init(int32_t n_threads, void (*task)(void))
     }
 }
 
-void thread_pool_destroy(void)
+void thread_pool_join(void)
+{
+    for (int32_t i = 0; i < num_threads; i++)
+        pthread_join(threads[i], NULL);
+}
+
+void thread_pool_cancel(void)
 {
     for (int32_t i = 0; i < num_threads; i++)
         pthread_cancel(threads[i]);
+}
 
+void thread_pool_destroy(void)
+{
     free(threads);
 }
