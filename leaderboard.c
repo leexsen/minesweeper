@@ -1,9 +1,9 @@
-#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 
 #include "error.h"
@@ -125,7 +125,7 @@ void send_leaderboard(int32_t socketfd)
     for (LeaderboardList *p = leaderboard_list_head; p != NULL; p = p->next) {
         
         cmd.cmd_id = LEADERBOARD_RECORD;
-        cmd.leaderboard.duration = p->entry.duration;
+        cmd.leaderboard.duration = htonl(p->entry.duration);
         cmd.leaderboard.record.num_won = p->entry.record->num_won;
         cmd.leaderboard.record.num_played = p->entry.record->num_played;
         strcpy(cmd.leaderboard.record.player_name, p->entry.record->player_name);

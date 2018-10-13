@@ -42,7 +42,7 @@ static void place_mines(Game *game)
         do {
             x = rand() % NUM_TILES_X;
             y = rand() % NUM_TILES_Y;
-        } while (tiles[x][y].is_mine || tiles[x][y].adjacent_mines != 0);
+        } while (tiles[x][y].is_mine);
 
         tiles[x][y].is_mine = true;
         update_adjacent_tiles(x, y, tiles);

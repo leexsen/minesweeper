@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <time.h>
 
 #define NUM_TILES_X 9
 #define NUM_TILES_Y 9

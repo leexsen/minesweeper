@@ -137,7 +137,7 @@ void print_leaderboard(CmdBlock *cmd)
     else {
         do {
             char *name = cmd->leaderboard.record.player_name;
-            uint32_t duration = cmd->leaderboard.duration;
+            uint32_t duration = ntohl(cmd->leaderboard.duration);
             uint8_t num_won = cmd->leaderboard.record.num_won;
             uint8_t num_played = cmd->leaderboard.record.num_played;
 

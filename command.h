@@ -2,7 +2,6 @@
 #define __COMMAND_H__
 
 #include <stdint.h>
-#include <time.h>
 
 #include "game.h"
 #include "leaderboard.h"
