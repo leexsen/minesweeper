@@ -143,7 +143,7 @@ void process_request(int32_t socketfd)
 
 void stop_server(int signal)
 {
-    stop_running = 1;
+    stop_running = true;
     close(server_socket);
 }
 
@@ -203,5 +203,6 @@ int main(int argc, char **argv)
     socket_queue_destroy();
     leaderboard_destroy();
     authentication_destroy();
-    pthread_exit(NULL);
+
+    return 0;
 }

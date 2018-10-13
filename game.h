@@ -7,7 +7,7 @@
 
 #define NUM_TILES_X 9
 #define NUM_TILES_Y 9
-#define NUM_MINES 1
+#define NUM_MINES 10
 
 typedef struct {
     int8_t adjacent_mines;
