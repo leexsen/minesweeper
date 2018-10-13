@@ -30,7 +30,6 @@ void socket_queue_destroy(void)
         queue_head = (queue_head + 1) % queue_capacity;
     }
     
-    close(queue[queue_head]);
     free(queue);
 }
 
