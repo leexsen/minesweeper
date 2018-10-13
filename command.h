@@ -52,12 +52,12 @@ typedef struct {
         struct {
             uint8_t tiles[NUM_TILES_X][NUM_TILES_Y];
             uint8_t num_mines;
-            time_t duration;
+            uint32_t duration;
         } game_info;
 
         struct {
             Record record;
-            time_t duration;
+            uint32_t duration;
         } leaderboard;
 
         User user;

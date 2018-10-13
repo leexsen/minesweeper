@@ -17,7 +17,7 @@ typedef struct record_list{
 
 typedef struct {
     Record *record;
-    time_t duration;
+    uint32_t duration;
 } Entry;
 
 typedef struct leaderboard_list {
@@ -25,7 +25,7 @@ typedef struct leaderboard_list {
     struct leaderboard_list *next;
 } LeaderboardList;
 
-extern void leaderboard_put(char *player_name, time_t duration, bool won);
+extern void leaderboard_put(char *player_name, uint32_t duration, bool won);
 extern void send_leaderboard(int32_t socketfd);
 extern void leaderboard_destroy(void);
 

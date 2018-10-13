@@ -3,11 +3,15 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <arpa/inet.h>
+#include <sys/signal.h>
 #include <sys/socket.h>
 
 #include "game.h"
 #include "command.h"
 #include "client_network.h"
+
+static int32_t socketfd;
 
 void print_welcome_msg(void)
 {
@@ -45,7 +49,7 @@ void print_tiles(CmdBlock *cmd)
     }
 }
 
-void reveal_tile(int32_t socketfd, CmdBlock *cmd, bool *game_over)
+void reveal_tile(CmdBlock *cmd, bool *game_over)
 {
     while (true) {
         printf("Enter tile coordinates (e.g. A0): ");
@@ -83,7 +87,7 @@ void reveal_tile(int32_t socketfd, CmdBlock *cmd, bool *game_over)
     }
 }
 
-void place_flag(int32_t socketfd, CmdBlock *cmd, bool *game_over)
+void place_flag(CmdBlock *cmd, bool *game_over)
 {
     while (true) {
         printf("Enter tile coordinates (e.g. A0): ");
@@ -115,13 +119,13 @@ void place_flag(int32_t socketfd, CmdBlock *cmd, bool *game_over)
             puts("\n\n-----------------------------------------------");
             puts("Congratulations! You have located all the mines");
             puts("-----------------------------------------------");
-            printf("You won in %ld seconds!\n\n", cmd->game_info.duration);
+            printf("You won in %d seconds!\n\n", ntohl(cmd->game_info.duration));
             break;
         }
     }
 }
 
-void print_leaderboard(int32_t socketfd, CmdBlock *cmd)
+void print_leaderboard(CmdBlock *cmd)
 {
     puts("\n------------------------------------------------------------------------------\n");
 
@@ -133,11 +137,11 @@ void print_leaderboard(int32_t socketfd, CmdBlock *cmd)
     else {
         do {
             char *name = cmd->leaderboard.record.player_name;
-            time_t duration = cmd->leaderboard.duration;
+            uint32_t duration = cmd->leaderboard.duration;
             uint8_t num_won = cmd->leaderboard.record.num_won;
             uint8_t num_played = cmd->leaderboard.record.num_played;
 
-            printf("%s\t%10ld seconds\t%5d games won, %5d games played\n", name, duration, num_won, num_played);
+            printf("%s\t%10d seconds\t%5d games won, %5d games played\n", name, duration, num_won, num_played);
             recv(socketfd, cmd, sizeof(CmdBlock), 0);
             
         } while (cmd->cmd_id != LEADERBOARD_END);
@@ -147,7 +151,7 @@ void print_leaderboard(int32_t socketfd, CmdBlock *cmd)
 
 }
 
-void play_game(int32_t socketfd)
+void play_game(void)
 {
     CmdBlock cmd;
     bool game_over = false;
@@ -171,10 +175,10 @@ void play_game(int32_t socketfd)
         char op = getchar();
 
         if (op == 'R') {
-            reveal_tile(socketfd, &cmd, &game_over);
+            reveal_tile(&cmd, &game_over);
 
         } else if (op == 'P') {
-            place_flag(socketfd, &cmd, &game_over);
+            place_flag(&cmd, &game_over);
 
         } else if (op == 'Q') {
             cmd.cmd_id = QUIT_GAME;
@@ -186,7 +190,7 @@ void play_game(int32_t socketfd)
     }
 }
 
-void menu_selection(int32_t socketfd)
+void menu_selection(void)
 {
     CmdBlock cmd;
 
@@ -203,12 +207,12 @@ void menu_selection(int32_t socketfd)
         if (op == '1') {
             cmd.cmd_id = START_GAME;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
-            play_game(socketfd);
+            play_game();
 
         } else if (op == '2') {
             cmd.cmd_id = REQUEST_LEADERBOARD;
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
-            print_leaderboard(socketfd, &cmd);
+            print_leaderboard(&cmd);
 
         } else if (op == '3') {
             cmd.cmd_id = DISCONNECT;
@@ -220,6 +224,16 @@ void menu_selection(int32_t socketfd)
     }
 }
 
+void stop_client(int signal)
+{
+    CmdBlock cmd;
+
+    cmd.cmd_id = DISCONNECT;
+    send(socketfd, &cmd, sizeof(CmdBlock), 0);
+    close(socketfd);
+    exit(0);
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 3) {
@@ -227,11 +241,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    signal(SIGINT, stop_client);
     print_welcome_msg();
 
     char *server_ip = argv[1];
     uint16_t port = atoi(argv[2]);
-    int32_t socketfd = client_network_connect(server_ip, port);
+    socketfd = client_network_connect(server_ip, port);
 
     CmdBlock cmd;
     recv(socketfd, &cmd, sizeof(CmdBlock), 0);
@@ -244,7 +259,7 @@ int main(int argc, char **argv)
         recv(socketfd, &cmd, sizeof(CmdBlock), 0);
 
         if (cmd.cmd_id == VALID_USER)
-            menu_selection(socketfd);
+            menu_selection();
         else
             puts("\nYou entered either an incorrect username or password. Disconnecting.");
     }

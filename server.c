@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 
 #include "socket_queue.h"
@@ -118,7 +119,7 @@ void process_request(int32_t socketfd)
             game_tiles_extract(game, &cmd);
             cmd.cmd_id = TILES_REVEALD_RESPOND;
             cmd.game_info.num_mines = game->num_mines;
-            cmd.game_info.duration = game->duration;
+            cmd.game_info.duration = htonl(game->duration);
             send(socketfd, &cmd, sizeof(CmdBlock), 0);
 
         } else if (cmd.cmd_id == REQUEST_TILES_MINES) {
@@ -148,11 +149,13 @@ void stop_server(int signal)
 
 void thread_cleanup_handler(void *arg)
 {
-    socket_queue_cancellation();
     int32_t client_socket = *((int32_t *)arg);
 
     if (client_socket != -1)
         close(client_socket);
+
+    else 
+        socket_queue_cancellation();
 }
 
 void connection_handler(void)
@@ -193,7 +196,6 @@ int main(int argc, char **argv)
             socket_queue_put(client_socket);
     }
 
-    puts("123");
     thread_pool_cancel();
     thread_pool_join();
     thread_pool_destroy();

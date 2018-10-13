@@ -86,7 +86,7 @@ static void leaderboard_list_put(LeaderboardList *node)
     }
 }
 
-void leaderboard_put(char *player_name, time_t duration, bool won)
+void leaderboard_put(char *player_name, uint32_t duration, bool won)
 {
     pthread_mutex_lock(&mutex);
     Record *record = record_get(player_name);

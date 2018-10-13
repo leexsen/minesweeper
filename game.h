@@ -7,7 +7,7 @@
 
 #define NUM_TILES_X 9
 #define NUM_TILES_Y 9
-#define NUM_MINES 10
+#define NUM_MINES 1
 
 typedef struct {
     int8_t adjacent_mines;
@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
     Tile tiles[NUM_TILES_X][NUM_TILES_Y];
-    time_t duration;
+    uint32_t duration;
     uint8_t num_mines;
     char player_name[20];
 } Game;
