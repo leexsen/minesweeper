@@ -8,6 +8,11 @@
 
 #define BACKLOG 10
 
+/*
+ * Initialize server network and start listening on the port
+ * @params:
+ *  port: the port that the server will be listening on
+ */
 int32_t server_network_init(uint16_t port)
 {
     struct sockaddr_in my_addr;
@@ -33,6 +38,11 @@ int32_t server_network_init(uint16_t port)
     return socketfd;
 }
 
+/*
+ * Accept a connection from clients
+ * @params:
+ *  server_socket: the socket the server is listening on
+ */
 int32_t server_network_accept(int32_t server_socket)
 {
     struct sockaddr_in client_addr;

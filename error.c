@@ -3,6 +3,11 @@
 
 #include "error.h"
 
+/*
+ * Show error message and exit the program
+ * @params:
+ *  code: the error code
+ */
 void error_exit(int code)
 {
     switch (code) {

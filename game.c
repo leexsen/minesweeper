@@ -12,6 +12,13 @@
 
 static pthread_mutex_t mutex_rand = PTHREAD_MUTEX_INITIALIZER;
 
+/*
+ * Update adjacent tiles
+ * @params:
+ *  x: the column of the mine
+ *  y: the row of the mine
+ *  tiles: the playfield
+ */
 static void update_adjacent_tiles(int x, int y, Tile (*tiles)[NUM_TILES_Y])
 {
     for (int i = -1; i <= 1; i++) {
@@ -31,6 +38,11 @@ static void update_adjacent_tiles(int x, int y, Tile (*tiles)[NUM_TILES_Y])
     }
 }
 
+/*
+ * Randomly place mines in the playfiled
+ * @params:
+ *  game: the game object
+ */
 static void place_mines(Game *game)
 {
     int x, y;
@@ -45,11 +57,18 @@ static void place_mines(Game *game)
         } while (tiles[x][y].is_mine);
 
         tiles[x][y].is_mine = true;
+
+        // update the adjacent tiles of the mine
         update_adjacent_tiles(x, y, tiles);
     }
     pthread_mutex_unlock(&mutex_rand);
 }
 
+/*
+ * Initialize the game object
+ * @params:
+ *  player_name: the player's name
+ */
 Game *game_init(char *player_name)
 {
     Game *game = (Game *)calloc(1, sizeof(Game));
@@ -64,6 +83,13 @@ Game *game_init(char *player_name)
     return game;
 }
 
+/*
+ * Reveal a tile based on the given position
+ * @params:
+ *  game: the game object
+ *  x: the column of the tile to be revealed
+ *  y: the row of the the tile to be revealed
+ */
 int game_reveal_tile(Game *game, int8_t x, int8_t y)
 {
     Tile (*tiles)[NUM_TILES_Y] = game->tiles;
@@ -90,6 +116,13 @@ int game_reveal_tile(Game *game, int8_t x, int8_t y)
     return 0; // reveal tile successful
 }
 
+/*
+ * Place a flag on the given position
+ * @params:
+ *  game: the game object
+ *  x: the column of the flag to be placed
+ *  y: the row of the the flag to be placed
+ */
 int game_place_flag(Game *game, int8_t x, int8_t y)
 {
     Tile (*tiles)[NUM_TILES_Y] = game->tiles;
@@ -109,6 +142,12 @@ int game_place_flag(Game *game, int8_t x, int8_t y)
     return 0; // place flag successful
 }
 
+/*
+ * Stop timing and update the leaderboard
+ * @params:
+ *  game: the game object
+ *  won: true if user won
+ */
 void game_over(Game *game, bool won)
 {
     game->duration = time(NULL) - game->duration;

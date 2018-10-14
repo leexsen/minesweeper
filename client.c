@@ -13,6 +13,9 @@
 
 static int32_t socketfd;
 
+/*
+ * Display welcome message
+ */
 void print_welcome_msg(void)
 {
     puts("-----------------------------------------------");
@@ -21,6 +24,12 @@ void print_welcome_msg(void)
     puts("Connecting to the server\n");
 }
 
+/*
+ * Get user's name and password from keyboard
+ * @params:
+ *  name: a buffer where the data from the user is stored
+ *  password: a buffer where the data from the user is stored
+ */
 void get_user_info(char *name, char *password)
 {
     puts("You are required to log on with your registered user name and password.\n");
@@ -31,6 +40,11 @@ void get_user_info(char *name, char *password)
     putchar('\n');
 }
 
+/*
+ * Display all tiles sent from the server
+ * @params:
+ *  cmd: the command block which stores information from the server
+ */
 void print_tiles(CmdBlock *cmd)
 {
     uint8_t (*tiles)[NUM_TILES_Y] = cmd->game_info.tiles;
@@ -49,6 +63,12 @@ void print_tiles(CmdBlock *cmd)
     }
 }
 
+/*
+ * Send reveal tile command to the server
+ * @params:
+ *  cmd: the command block used to communicate with the server
+ *  game_over: set true when the user hit a mine
+ */
 void reveal_tile(CmdBlock *cmd, bool *game_over)
 {
     while (true) {
@@ -87,6 +107,12 @@ void reveal_tile(CmdBlock *cmd, bool *game_over)
     }
 }
 
+/*
+ * Send place flag command to the server
+ * @params:
+ *  cmd: the command block used to communicate with the server
+ *  game_over: set true when the use found all mines
+ */
 void place_flag(CmdBlock *cmd, bool *game_over)
 {
     while (true) {
@@ -125,6 +151,11 @@ void place_flag(CmdBlock *cmd, bool *game_over)
     }
 }
 
+/*
+ * Recive the leaderboard info from the server and display them on the screen
+ * @params:
+ *  cmd: the command block used to communicate with the server
+ */
 void print_leaderboard(CmdBlock *cmd)
 {
     puts("\n------------------------------------------------------------------------------\n");
@@ -151,6 +182,9 @@ void print_leaderboard(CmdBlock *cmd)
 
 }
 
+/*
+ * The main loop for playing the game
+ */
 void play_game(void)
 {
     CmdBlock cmd;
@@ -190,6 +224,9 @@ void play_game(void)
     }
 }
 
+/*
+ * Display menu
+ */
 void menu_selection(void)
 {
     CmdBlock cmd;
@@ -224,6 +261,9 @@ void menu_selection(void)
     }
 }
 
+/*
+ * Stop the client when pressing Ctrl-C
+ */
 void stop_client(int signal)
 {
     CmdBlock cmd;

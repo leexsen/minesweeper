@@ -25,6 +25,13 @@
 static volatile sig_atomic_t stop_running;
 static int32_t server_socket;
 
+/*
+ * Convert the playfield stored on the server to the format
+ * that can be interpreted by the client program 
+ * @params:
+ *  gmae: the game object
+ *  cmd: the command block storing the request from the client
+ */
 void game_tiles_extract(Game *game, CmdBlock *cmd)
 {
     uint8_t cmd_id = cmd->cmd_id;
@@ -48,6 +55,7 @@ void game_tiles_extract(Game *game, CmdBlock *cmd)
 
             } else if (game_tiles[i][j].revealed) {
 
+                // only send the position of revealed tiles
                 if (cmd_id == REQUEST_TILES_REVEALED)
                     cmd_tiles[i][j] = game_tiles[i][j].adjacent_mines + '0';
 
@@ -60,19 +68,25 @@ void game_tiles_extract(Game *game, CmdBlock *cmd)
     }
 }
 
+/*
+ * The main loop for processing requests from clients
+ * @params:
+ *  socketfd: the socket connected with the client
+ */
 void process_request(int32_t socketfd)
 {
     Game *game;
     CmdBlock cmd;
     char player_name[20];
 
+    // ask username and password
     cmd.cmd_id = ASK_USERINFO;
     send(socketfd, &cmd, sizeof(CmdBlock), 0);
 
     while (true) {
         recv(socketfd, &cmd, sizeof(CmdBlock), 0);
 
-        if (cmd.cmd_id == USERINFO_RESPOND) {          
+        if (cmd.cmd_id == USERINFO_RESPOND) {
             if (authentication_isvalid(cmd.user.name, cmd.user.password)) {
                 cmd.cmd_id = VALID_USER;
                 send(socketfd, &cmd, sizeof(CmdBlock), 0);
@@ -141,26 +155,44 @@ void process_request(int32_t socketfd)
     }
 }
 
+/*
+ * Stop the server when pressing Ctrl-C
+ */
 void stop_server(int signal)
 {
     stop_running = 1;
     close(server_socket);
 }
 
+/*
+ * The cleanup function when receving the cancel signal 
+ * issued by pthread_cancel()
+ * @params:
+ *  arg: the socket connected with the client
+ */
 void thread_cleanup_handler(void *arg)
 {
     int32_t client_socket = *((int32_t *)arg);
 
+    // the thread is currently connected with a client
     if (client_socket != -1)
         close(client_socket);
 
-    else 
+    else
+        // the thread is currently not connected with a client
+        // so unlock the mutex locked by the thread itself
         socket_queue_cancellation();
 }
 
+/*
+ * Get a socket from the queue and start processing it.
+ * Every thread in the thread pool will invoke this function
+ */
 void connection_handler(void)
 {
     int32_t client_socket = -1;
+
+    // install the cleanup handler
     pthread_cleanup_push(thread_cleanup_handler, (void *)&client_socket);
 
     while (true) {

@@ -7,6 +7,12 @@
 #include "error.h"
 #include "client_network.h"
 
+/*
+ * Establish the connection with the server
+ * @params:
+ *  server_ip: the ip of the server
+ *  port: server's port
+ */
 int32_t client_network_connect(char *server_ip, uint16_t port)
 {
     struct sockaddr_in server_addr;

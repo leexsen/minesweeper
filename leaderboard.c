@@ -14,6 +14,12 @@ static RecordList *record_list_head;
 static LeaderboardList *leaderboard_list_head;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+/*
+ * Find a record from the record list using player name
+ * @params:
+ *  game: the game object
+ *  player_name: the name of the record to be searched
+ */
 static Record *record_get(char *player_name)
 {
     for (RecordList *p = record_list_head; p != NULL; p = p->next) {
@@ -24,12 +30,18 @@ static Record *record_get(char *player_name)
     return NULL;
 }
 
+/*
+ * Put a record object into the record list
+ * @params:
+ *  record: the record to be inserted
+ */
 static void record_put(Record *record)
 {
     RecordList *p = (RecordList *)calloc(1, sizeof(RecordList));
     if (p == NULL)
         error_exit(ERROR_MEM_ALLOC);
 
+    // the list is empty
     if (record_list_head == NULL) {
         record_list_head = p;
         record_list_head->record = record;
@@ -42,6 +54,15 @@ static void record_put(Record *record)
     }
 }
 
+/*
+ * Compare two entries.
+ * Return -1 if the first one is smaller than the second one.
+ * Return 0 if the first one is equal to the second one.
+ * Return 11 if the first one is larger than the second one.
+ * @params:
+ *  a: the first entry
+ *  b: the second entry
+ */
 static int compare(Entry *a, Entry *b)
 {
     if (a->duration < b->duration)
@@ -62,12 +83,21 @@ static int compare(Entry *a, Entry *b)
     }
 }
 
+/*
+ * Insert an entry into the leaderboard.
+ * The entry in the head of the leaderboard is always greater than
+ * the entry in the tail of the leaderboard
+ * @params:
+ *  node: the entry to be inserted
+ */
 static void leaderboard_list_put(LeaderboardList *node)
 {
     if (leaderboard_list_head == NULL)
         leaderboard_list_head = node;
 
     else {
+
+        // search the list to find a node that is smaller than the node to be inserted
         for (LeaderboardList **p = &leaderboard_list_head ;; p = &((*p)->next)) {
             if (*p == NULL) {
                 *p = node;
@@ -86,11 +116,23 @@ static void leaderboard_list_put(LeaderboardList *node)
     }
 }
 
+/*
+ * Update the leaderboard
+ * @params:
+ *  player_name: the name of the record to be searched
+ *  duration: the duration of the game
+ *  won: true if the user won
+ */
 void leaderboard_put(char *player_name, uint32_t duration, bool won)
 {
     pthread_mutex_lock(&mutex);
+
+    // get the historical record object of the user
     Record *record = record_get(player_name);
 
+    // if this is first time the user played the game, create a record object
+    // to store the historical info of the object.
+    // Note. erver user only have one record object
     if (record == NULL) {
         record = (Record *)calloc(1, sizeof(Record));
         if (record == NULL)
@@ -108,6 +150,7 @@ void leaderboard_put(char *player_name, uint32_t duration, bool won)
         if (node == NULL)
                 error_exit(ERROR_MEM_ALLOC);
 
+        // link this entry to the historical record of the user
         node->entry.record = record;
         node->entry.duration = duration;
 
@@ -117,6 +160,11 @@ void leaderboard_put(char *player_name, uint32_t duration, bool won)
     pthread_mutex_unlock(&mutex);
 }
 
+/*
+ * Send the leaderboard clients
+ * @params:
+ *  socketfd: the socket connected with the client
+ */
 void send_leaderboard(int32_t socketfd)
 {
     pthread_mutex_lock(&mutex);
@@ -133,11 +181,18 @@ void send_leaderboard(int32_t socketfd)
         send(socketfd, &cmd, sizeof(CmdBlock), 0);
     }
 
+    // tells the client that the transmission of leaderboard is completed
     cmd.cmd_id = LEADERBOARD_END;
     send(socketfd, &cmd, sizeof(CmdBlock), 0);
     pthread_mutex_unlock(&mutex);
 }
 
+
+/*
+ * Deallocate the record list and the leaderboard
+ * @params:
+ *  socketfd: the socket connected with the client
+ */
 void leaderboard_destroy(void)
 {
     for (RecordList *p = record_list_head; p != NULL; p = record_list_head) {
