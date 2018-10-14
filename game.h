@@ -1,6 +1,7 @@
 #ifndef __GAME_H__
 #define __GAME_H__
 
+#include <time.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -16,7 +17,7 @@ typedef struct {
 
 typedef struct {
     Tile tiles[NUM_TILES_X][NUM_TILES_Y];
-    uint32_t duration;
+    time_t duration;
     uint8_t num_mines;
     char player_name[20];
 } Game;
