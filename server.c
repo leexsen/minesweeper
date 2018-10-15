@@ -75,8 +75,8 @@ void game_tiles_extract(Game *game, CmdBlock *cmd)
  */
 void process_request(int32_t socketfd)
 {
-    Game *game;
     CmdBlock cmd;
+    Game *game = NULL;
     char player_name[20];
 
     // ask username and password

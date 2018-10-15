@@ -1,4 +1,4 @@
-CFLAGG = -Wall -pthread -std=gnu99
+CFLAGG = -Ofast -Wall -pthread -std=gnu99
 
 all: server client
 server: authentication.o error.o server.o server_network.o socket_queue.o thread_pool.o game.o leaderboard.o
